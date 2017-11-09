@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+
 import sys
 import numpy as np
 import pickle
@@ -82,22 +83,24 @@ def partition(p, pieces=2):
     return ps
 
 
-def main():
-    editDist = int(sys.argv[1])
-    filename = sys.argv[2]
-    p = sys.argv[3].strip()
-    t = ""
+def find_alignment(p, t):
+    editDist = int(math.floor(len(p) * .02))
     k = int(math.ceil(len(p) / (editDist + 2)))
-    print(k)
-    print(len(p))
+    index = create_dict(t,k)
+
+    start_index = queryIndex(p, t, index, k, editDist)
+    end_index = start_index + len(p)
+    return (start_index, end_index)
+
+
+def main():
+    filename = sys.argv[1]
+    p = sys.argv[2].strip()
+    t = ""
     with open(filename, "r") as infile:
         infile.readline()
         t = infile.read()
         t = t.strip().replace('\n', '')
-    index = create_dict(t,k)
-    print(queryIndex(p, t, index, k, editDist))
-
-
 
 if __name__ == "__main__":
     main()
