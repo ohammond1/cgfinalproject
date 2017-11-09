@@ -13,13 +13,15 @@ import sys
 def main():
     kmer_length = int(sys.argv[1])
     reference_file = sys.argv[2]
+    sequence = ""
     with open(reference_file, "r") as infile:
         infile.readline() # skip the ID line
         sequence = infile.read()
-        sequence = sequence.strip().replace('\n','')
-        index = create_dict(sequence, kmer_length)
 
-    pickle_file = reference_file[:len(reference_file)-3] + sys.argv[1] + ".p"
+    sequence = sequence.upper()
+    sequence = sequence.strip().replace('\n','')
+    index = create_dict(sequence, kmer_length)
+    pickle_file = reference_file[:len(reference_file)-4] + sys.argv[1] + ".p"
     pickle.dump(index, open(pickle_file, "wb"))
     
 
