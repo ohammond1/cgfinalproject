@@ -96,37 +96,3 @@ for can in b:
 
 
 
-
-
-
-
-# attempts
-'''
-final_front_candidates = []
-for can in front_can: # for each of the front sgRNA possibilities
-    off_target_hits = []
-    can1 = can[:5]
-    can2 = can[5:10]
-    can3 = can[10:15]
-    can4 = can[15:]
-    for i in sgRNA.queryIndex(can1)[0]:
-        if not sgRNA.naive_approx_hamming(can[5:],sgRNA.ref_genome[i+5:i+10],3) == -1 and (not i in off_target_hits):
-            off_target_hits.append(i)
-    for i in sgRNA.queryIndex(can2)[0]:
-        if not sgRNA.naive_approx_hamming(can,sgRNA.ref_genome[i:i+20],3) == -1 and (not (i-5) in off_target_hits):
-            off_target_hits.append(i)
-    for i in sgRNA.queryIndex(can3)[0]:
-        if not sgRNA.naive_approx_hamming(can,sgRNA.ref_genome[
-    final_front_candidates.append((can, len(off_target_hits)))
-
-    hits_can1 += len(sgRNA.queryIndex(can1)[0])
-    final_front_candidates.append((can,hits_can1))
-    for i in sgRNA.queryIndex(can1):
-    partitions = [can1,can2,can3,can4] # list of partitions for this possibility
-    for p in partitions: # for each 5-mer
-        hits = sgRNA.queryIndex(p)[0] # indecies of potential hits
-        for h in hits:
-
-# printing out final list of candidates
-for can in final_front_candidates:
-    print(str(can[0]) + ' ' + str(can[1]))'''

@@ -101,6 +101,7 @@ def main():
         infile.readline()
         t = infile.read()
         t = t.strip().replace('\n', '')
+    print(find_alignment(p,t))
 
 if __name__ == "__main__":
     main()
