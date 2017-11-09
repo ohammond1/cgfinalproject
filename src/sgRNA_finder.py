@@ -32,3 +32,52 @@ class sgRNAFinder:
                 continue
             back_candidates.append(self.ref_genome[i:i+20])
         return back_candidates
+
+    def query(self, candidate):
+        return self.kmer_index.get(candidate, [])
+
+    def queryIndex(self, candidate):
+        k = 5
+        offsets = []
+        index_hits = 0
+        for i in self.query(candidate):
+            index_hits += 1
+            # verify that the rest of P matches
+            if candidate[k:] == self.ref_genome[i+k:i+len(candidate)]: 
+                offsets.append(i)
+        return(offsets, index_hits)
+
+    def naive_approx_hamming(self, candidate, t, maxDistance):
+        # loop over alignments
+        for i in range(len(t) - len(candidate) + 1):
+            nmm = 0
+            for j in range(len(candidate)): # loop over characters
+                if t[i+j] != candidate[j]: # compare characters
+                    nmm += 1 # mismatch
+                    if nmm > maxDistance:
+                        break # exceeded max hamming dist
+            if nmm <= maxDistance:
+                return (i, nmm) # approximate match with number mismatches
+        return (-1, -1)
+
+    def find_CG_composition(self, candidates):
+        possibilities = []
+        for can in candidates:
+            num_CG = 0
+            for char in can[0]:
+                if char == "C" or char == "G":
+                    num_CG += 1
+            comp_CG = float(num_CG) / 20
+            possibilities.append((can[0], can[1], comp_CG))
+        return possibilities
+
+    def find_G_pos20(self, candidates):
+        possibilities = []
+        is_G = ''
+        for can in candidates:
+            if can[0][19] == "G":
+                is_G = 'Y'
+            else:
+                is_G = 'N'
+            possibilities.append((can[0], can[1], can[2], is_G))
+        return possibilities
