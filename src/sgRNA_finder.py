@@ -1,5 +1,6 @@
 import pre_process
 from find_alignment import find_alignment
+import bwt
 
 class sgRNAFinder:
     def __init__(self, ref_genome_file):

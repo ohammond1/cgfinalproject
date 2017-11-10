@@ -8,6 +8,12 @@ sgRNA = sgRNA_finder.sgRNAFinder(seq_file)
 front_can = sgRNA.get_sgRNA_front(2340) # finding front sgRNA possibilities
 back_can = sgRNA.get_sgRNA_back(2341) # finding back sgRNA possibilities
 
+for i in front_can:
+    out = ''
+    out += i + ' '
+    out += str(sgRNA.query_index_bwt(i))
+    print(out)
+
 # For testing
 '''
 print(front_can)
@@ -38,7 +44,7 @@ for can in front_can: # for each candidate
             ham = sgRNA.naive_approx_hamming(can, sgRNA.ref_genome[i:i+20], 3)[0]
             if ham != -1: # checking that hamming distance is <= 3
                 off_target_hits.append(i)
-    
+
     # append candidate and number of off target hits to final list
     # -1 because it will always find itself
     final_front_candidates.append((can, len(off_target_hits)-1))
@@ -73,7 +79,7 @@ for can in back_can: # for each candidate
             ham = sgRNA.naive_approx_hamming(can, sgRNA.ref_genome[i:i+20], 3)[0]
             if ham != -1: # checking that hamming distance is <= 3
                 off_target_hits.append(i)
-    
+
     # append candidate and number of off target hits to final list
     # -1 because it will always find itself
     final_back_candidates.append((can, len(off_target_hits)-1))
@@ -92,7 +98,3 @@ for can in backs:
 b = sgRNA.find_G_pos20(backs)
 for can in b:
     print(str(can[0]) + " " + str(can[1]) + " " + str(can[2]) + " " + can[3])
-
-
-
-
