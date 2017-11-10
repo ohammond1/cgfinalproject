@@ -44,7 +44,7 @@ class sgRNAFinder:
         for i in self.query(candidate):
             index_hits += 1
             # verify that the rest of P matches
-            if candidate[k:] == self.ref_genome[i+k:i+len(candidate)]: 
+            if candidate[k:] == self.ref_genome[i+k:i+len(candidate)]:
                 offsets.append(i)
         return(offsets, index_hits)
 
@@ -83,6 +83,9 @@ class sgRNAFinder:
             possibilities.append((can[0], can[1], can[2], is_G))
         return possibilities
 
+    def query_index_bwt(self, candidate):
+        bwt_data = bwt.make_all(self.ref_genome)
+        return bwt.find(candidate, self.ref_genome, mismatches=3, bwt_data=bwt_data)
 
 
 def find_sgRNA(seq_file, start, end):
@@ -175,4 +178,3 @@ def find_sgRNA(seq_file, start, end):
     b = sgRNA.find_G_pos20(backs)
     for can in b:
         print(str(can[0]) + " " + str(can[1]) + " " + str(can[2]) + " " + can[3])
-
