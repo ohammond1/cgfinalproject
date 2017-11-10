@@ -1,0 +1,1 @@
+http://pallab.serc.iisc.ernet.in/gester/dbsearch.php?stem=on&stem_length_lower=4&stem_length_upper=30&loop=on&loop_length_lower=3&loop_length_upper=9&mismatch=on&max_mismatch=3&orf=on&dis_orf=270&organism=Enter+keyword+here&dG_cutoff=&genome_length=&percent_GC=&T_orf=&T_term=&B_term=&L_term=&I_term=&X_term=&Ld_term=&Id_term=&Xd_term=&U_term=&V_term=&tax_id=
