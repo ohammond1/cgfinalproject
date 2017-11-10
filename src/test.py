@@ -8,12 +8,22 @@ sgRNA = sgRNA_finder.sgRNAFinder(seq_file)
 front_can = sgRNA.get_sgRNA_front(2340) # finding front sgRNA possibilities
 back_can = sgRNA.get_sgRNA_back(2341) # finding back sgRNA possibilities
 
+print('BWT TEST:')
 for i in front_can:
     out = ''
     out += i + ' '
     out += str(sgRNA.query_index_bwt(i))
     print(out)
 
+print('\nSELF COMPLEMENT SCORE TEST:')
+for i in front_can:
+    out = ''
+    out += i + ' '
+    out += str(sgRNA.self_complement_score(i))
+    print(out)
+print("***")
+print(sgRNA.self_complement_score('AAAAGGGGGGGGTTTT'))
+print("***")
 # For testing
 '''
 print(front_can)

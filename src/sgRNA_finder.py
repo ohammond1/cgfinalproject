@@ -88,6 +88,21 @@ class sgRNAFinder:
         bwt_data = bwt.make_all(self.ref_genome)
         return bwt.find(candidate, self.ref_genome, mismatches=3, bwt_data=bwt_data)
 
+    def self_complement_score(self, candidate):
+        n_map = {'A': 'T', 'T':'A', 'G':'C', 'C':'G'}
+        first_half = candidate[:int(len(candidate)/2)]
+        second_half = candidate[int(len(candidate)/2):]
+        second_half_complement = ''
+        for i in range(len(second_half)):
+            second_half_complement += n_map[second_half[i]] #find complements
+        second_half_complement = second_half_complement[::-1] # reverse string
+        count = 0
+        for i in range(0, len(second_half_complement)-3):
+            if ''.join(first_half[i:i+4]) in ''.join(second_half_complement):
+                count += 1
+        return count
+
+
 
 def find_sgRNA(seq_file, start, end):
 
