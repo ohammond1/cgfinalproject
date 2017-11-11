@@ -14,6 +14,9 @@ def main():
         t = infile.read()
         t = t.strip().replace('\n', '')
     indices = find_alignment(p, t)
+    if indices[0] == -1:
+        print("No valid alignments found")
+        return
     find_sgRNA(filename, indices[0], indices[1])
 
 

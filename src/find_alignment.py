@@ -4,7 +4,7 @@ import sys
 import numpy as np
 import pickle
 import math
-from pre_process import create_dict 
+from pre_process import create_dict
 
 
 def edDistDp(x, y, worstDist):
@@ -52,17 +52,19 @@ def queryIndex(p, t, index, k, worstDist):
         matches = index.get(kmer, [])
         print(matches)
         for match in matches:
-            startIndex = match - i - worstDist 
+            startIndex = match - i - worstDist
             endIndex = match - i + len(p) + worstDist
             if startIndex < 0:
                 startIndex = 0
             if endIndex > len(t):
                 endIndex = len(t)
-            ed = edDistDp(p, t[startIndex:endIndex], worstDist)
+            checkDist = bestIndex
+            if checkDist == -1:
+                checkDist = worstDist
+            ed = edDistDp(p, t[startIndex:endIndex], checkDist)
             if ed[0] != -1:
-                if ed[1] < bestDistance or bestDistance == -1:
-                    bestDistance = ed[1]
-                    bestIndex = startIndex + ed[0]
+                bestDistance = ed[1]
+                bestIndex = startIndex + ed[0]
         i += k
     return bestIndex
 
