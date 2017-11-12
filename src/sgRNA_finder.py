@@ -209,7 +209,7 @@ def find_sgRNA(seq_file, start, end):
         break
         print(str(can[0]) + " " + str(can[1]) + " " + str(can[2]) + " " + can[3])
 
-    out = 'Sequence\t     Off-site hits\t CG%\t G-20th\tSelf–Complementarity'
+    out = 'Sequence\t     Off-site hits\t CG%\t G-20th\tSelf–Complementarity\n'
     for count, seq in enumerate(final_front_candidates):
         out += seq[0] + '\t' + str(seq[1]) + ' \t\t' + str(b[count][2]) + '   \t' + b[count][3]
         out += '\t' + str(sgRNA.self_complement_score(seq[0]))
