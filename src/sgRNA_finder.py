@@ -89,9 +89,9 @@ class sgRNAFinder:
         return bwt.find(candidate, self.ref_genome, mismatches=3, bwt_data=bwt_data)
 
     def self_complement_score(self, candidate):
-        n_map = {'A': 'T', 'T':'A', 'G':'C', 'C':'G'}
-        first_half = candidate[:int(len(candidate)/2)]
-        second_half = candidate[int(len(candidate)/2):]
+        n_map = {'A': 'U', 'U':'A', 'G':'C', 'C':'G'}
+        first_half = self.get_RNA_complement(candidate[:int(len(candidate)/2)])
+        second_half = self.get_RNA_complement(candidate[int(len(candidate)/2):])
         second_half_complement = ''
         for i in range(len(second_half)):
             second_half_complement += n_map[second_half[i]] #find complements
@@ -102,10 +102,23 @@ class sgRNAFinder:
                 count += 1
         return count
 
+    def get_RNA_complement(self, dna):
+        complement = {'A':'U', 'T':'A', 'G':'C', 'C':'G'}
+        rna = [complement[i] for i in dna]
+        return ''.join(rna)
+
 
 
 def find_sgRNA(seq_file, start, end):
 
+    '''
+    Rows:
+    1. sgRNA strand
+    2. offset hits
+    3. CG composition
+    4. G 20th position (for rna)
+    5. self complementarity (for rna)
+    '''
     sgRNA = sgRNAFinder(seq_file)
     front_can = sgRNA.get_sgRNA_front(2340) # finding front sgRNA possibilities
     back_can = sgRNA.get_sgRNA_back(2341) # finding back sgRNA possibilities
@@ -145,14 +158,13 @@ def find_sgRNA(seq_file, start, end):
         # -1 because it will always find itself
         final_front_candidates.append((can, len(off_target_hits)-1))
 
-    print() # formatting
 
-    # printing out final list of candidates
-    print("Possible sgRNAs for 5' end: ")
-    for can in final_front_candidates:
-        print(str(can[0]) + " " + str(can[1]))
-
-    print() #formatting
+    # # printing out final list of candidates
+    # print("Possible sgRNAs for 5' end: ")
+    # for can in final_front_candidates:
+    #     print(str(can[0]) + " " + str(can[1]))
+    #
+    # print() #formatting
 
     # Dealing with second sgRNA
     final_back_candidates = []
@@ -181,16 +193,25 @@ def find_sgRNA(seq_file, start, end):
         final_back_candidates.append((can, len(off_target_hits)-1))
 
     # printing out final list of back candidiates
-    print("Possible sgRNAs for 3' end: ")
-    for can in final_back_candidates:
-        print(str(can[0]) + " " + str(can[1]))
-
-    print()
+    # print("Possible sgRNAs for 3' end: ")
+    # for can in final_back_candidates:
+    #     print(str(can[0]) + " " + str(can[1]))
+    #
+    # print()
 
     backs = sgRNA.find_CG_composition(final_back_candidates)
     for can in backs:
+        break
         print(str(can[0]) + " " + str(can[1]) + " " + str(can[2]))
 
     b = sgRNA.find_G_pos20(backs)
     for can in b:
+        break
         print(str(can[0]) + " " + str(can[1]) + " " + str(can[2]) + " " + can[3])
+
+    out = 'Sequence\t     Off-site hits\t CG%\t G-20th\tSelf–Complementarity'
+    for count, seq in enumerate(final_front_candidates):
+        out += seq[0] + '\t' + str(seq[1]) + ' \t\t' + str(b[count][2]) + '   \t' + b[count][3]
+        out += '\t' + str(sgRNA.self_complement_score(seq[0]))
+        out += '\n'
+    print(out)
