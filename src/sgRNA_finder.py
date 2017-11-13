@@ -1,6 +1,7 @@
 import pre_process
 from find_alignment import find_alignment
 import bwt
+import operator
 
 class sgRNAFinder:
     def __init__(self, ref_genome_file):
@@ -200,18 +201,31 @@ def find_sgRNA(seq_file, start, end):
     # print()
 
     backs = sgRNA.find_CG_composition(final_back_candidates)
-    for can in backs:
-        break
-        print(str(can[0]) + " " + str(can[1]) + " " + str(can[2]))
-
+    fronts = sgRNA.find_CG_composition(final_front_candidates)
     b = sgRNA.find_G_pos20(backs)
-    for can in b:
-        break
-        print(str(can[0]) + " " + str(can[1]) + " " + str(can[2]) + " " + can[3])
+    f = sgRNA.find_G_pos20(fronts)
 
-    out = 'Sequence\t     Off-site hits\t CG%\t G-20th\tSelf–Complementarity\n'
-    for count, seq in enumerate(final_front_candidates):
-        out += seq[0] + '\t' + str(seq[1]) + ' \t\t' + str(b[count][2]) + '   \t' + b[count][3]
-        out += '\t' + str(sgRNA.self_complement_score(seq[0]))
+    b.sort(key=operator.itemgetter(1)) #sorts list by off-target hits
+    print("FRONT sgRNA")
+    out = 'Sequence\t\tOff-site hits\tCG%    G-20th\tSelf–Complementarity\tWarning\n'
+    for count, seq in enumerate(b):
+        out += b[count][0] + '\t' + str(b[count][1]) + ' \t\t' + str(b[count][2]) + '   \t' + b[count][3]
+        out += '\t' + str(sgRNA.self_complement_score(b[count][0]))
+        if b[count][3] == 'Y' or sgRNA.self_complement_score(b[count][0]) > 0:
+            out += '\t\t\tUNSAFE'
+        else:
+            out += '\t\t\tOK'
+        out += '\n'
+    print(out)
+    print("-------------------------------------------------------------------------")
+    print("BACK sgRNA")
+    out = 'Sequence\t\tOff-site hits\tCG%    G-20th\tSelf–Complementarity\tWarning\n'
+    for count, seq in enumerate(f):
+        out += f[count][0] + '\t' + str(f[count][1]) + ' \t\t' + str(f[count][2]) + '   \t' + f[count][3]
+        out += '\t' + str(sgRNA.self_complement_score(f[count][0]))
+        if b[count][3] == 'Y' or sgRNA.self_complement_score(f[count][0]) > 0:
+            out += '\t\t\tUNSAFE'
+        else:
+            out += '\t\t\tOK'
         out += '\n'
     print(out)
