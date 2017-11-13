@@ -23,6 +23,8 @@ class sgRNAFinder:
                 continue
             if i+19 >= len(self.ref_genome):
                 break
+            if not self.ref_genome[i:i+20].endswith('GG'):
+                continue
             front_candidates.append(self.ref_genome[i:i+20])
         return front_candidates
 
@@ -32,6 +34,8 @@ class sgRNAFinder:
             if i+19 >= len(self.ref_genome):
                 break
             if i < 0:
+                continue
+            if not self.ref_genome[i:i+20].endswith('GG'):
                 continue
             back_candidates.append(self.ref_genome[i:i+20])
         return back_candidates
