@@ -1,6 +1,7 @@
 import pre_process
 from find_alignment import find_alignment
 import bwt
+import operator
 
 class sgRNAFinder:
     def __init__(self, ref_genome_file):
@@ -22,6 +23,8 @@ class sgRNAFinder:
                 continue
             if i+19 >= len(self.ref_genome):
                 break
+            if not self.ref_genome[i:i+20].endswith('GG'):
+                continue
             front_candidates.append(self.ref_genome[i:i+20])
         return front_candidates
 
@@ -31,6 +34,8 @@ class sgRNAFinder:
             if i+19 >= len(self.ref_genome):
                 break
             if i < 0:
+                continue
+            if not self.ref_genome[i:i+20].endswith('GG'):
                 continue
             back_candidates.append(self.ref_genome[i:i+20])
         return back_candidates
@@ -89,9 +94,9 @@ class sgRNAFinder:
         return bwt.find(candidate, self.ref_genome, mismatches=3, bwt_data=bwt_data)
 
     def self_complement_score(self, candidate):
-        n_map = {'A': 'T', 'T':'A', 'G':'C', 'C':'G'}
-        first_half = candidate[:int(len(candidate)/2)]
-        second_half = candidate[int(len(candidate)/2):]
+        n_map = {'A': 'U', 'U':'A', 'G':'C', 'C':'G'}
+        first_half = self.get_RNA_complement(candidate[:int(len(candidate)/2)])
+        second_half = self.get_RNA_complement(candidate[int(len(candidate)/2):])
         second_half_complement = ''
         for i in range(len(second_half)):
             second_half_complement += n_map[second_half[i]] #find complements
@@ -102,10 +107,23 @@ class sgRNAFinder:
                 count += 1
         return count
 
+    def get_RNA_complement(self, dna):
+        complement = {'A':'U', 'T':'A', 'G':'C', 'C':'G'}
+        rna = [complement[i] for i in dna]
+        return ''.join(rna)
+
 
 
 def find_sgRNA(seq_file, start, end):
 
+    '''
+    Rows:
+    1. sgRNA strand
+    2. offset hits
+    3. CG composition
+    4. G 20th position (for rna)
+    5. self complementarity (for rna)
+    '''
     sgRNA = sgRNAFinder(seq_file)
     front_can = sgRNA.get_sgRNA_front(2340) # finding front sgRNA possibilities
     back_can = sgRNA.get_sgRNA_back(2341) # finding back sgRNA possibilities
@@ -145,14 +163,13 @@ def find_sgRNA(seq_file, start, end):
         # -1 because it will always find itself
         final_front_candidates.append((can, len(off_target_hits)-1))
 
-    print() # formatting
 
-    # printing out final list of candidates
-    print("Possible sgRNAs for 5' end: ")
-    for can in final_front_candidates:
-        print(str(can[0]) + " " + str(can[1]))
-
-    print() #formatting
+    # # printing out final list of candidates
+    # print("Possible sgRNAs for 5' end: ")
+    # for can in final_front_candidates:
+    #     print(str(can[0]) + " " + str(can[1]))
+    #
+    # print() #formatting
 
     # Dealing with second sgRNA
     final_back_candidates = []
@@ -181,16 +198,38 @@ def find_sgRNA(seq_file, start, end):
         final_back_candidates.append((can, len(off_target_hits)-1))
 
     # printing out final list of back candidiates
-    print("Possible sgRNAs for 3' end: ")
-    for can in final_back_candidates:
-        print(str(can[0]) + " " + str(can[1]))
-
-    print()
+    # print("Possible sgRNAs for 3' end: ")
+    # for can in final_back_candidates:
+    #     print(str(can[0]) + " " + str(can[1]))
+    #
+    # print()
 
     backs = sgRNA.find_CG_composition(final_back_candidates)
-    for can in backs:
-        print(str(can[0]) + " " + str(can[1]) + " " + str(can[2]))
-
+    fronts = sgRNA.find_CG_composition(final_front_candidates)
     b = sgRNA.find_G_pos20(backs)
-    for can in b:
-        print(str(can[0]) + " " + str(can[1]) + " " + str(can[2]) + " " + can[3])
+    f = sgRNA.find_G_pos20(fronts)
+
+    b.sort(key=operator.itemgetter(1)) #sorts list by off-target hits
+    print("FRONT sgRNA")
+    out = 'Sequence\t\tOff-site hits\tCG%    G-20th\tSelf–Complementarity\tWarning\n'
+    for count, seq in enumerate(b):
+        out += b[count][0] + '\t' + str(b[count][1]) + ' \t\t' + str(b[count][2]) + '   \t' + b[count][3]
+        out += '\t' + str(sgRNA.self_complement_score(b[count][0]))
+        if b[count][3] == 'Y' or sgRNA.self_complement_score(b[count][0]) > 0:
+            out += '\t\t\tUNSAFE'
+        else:
+            out += '\t\t\tOK'
+        out += '\n'
+    print(out)
+    print("-------------------------------------------------------------------------")
+    print("BACK sgRNA")
+    out = 'Sequence\t\tOff-site hits\tCG%    G-20th\tSelf–Complementarity\tWarning\n'
+    for count, seq in enumerate(f):
+        out += f[count][0] + '\t' + str(f[count][1]) + ' \t\t' + str(f[count][2]) + '   \t' + f[count][3]
+        out += '\t' + str(sgRNA.self_complement_score(f[count][0]))
+        if b[count][3] == 'Y' or sgRNA.self_complement_score(f[count][0]) > 0:
+            out += '\t\t\tUNSAFE'
+        else:
+            out += '\t\t\tOK'
+        out += '\n'
+    print(out)

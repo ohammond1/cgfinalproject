@@ -104,7 +104,10 @@ print()
 backs = sgRNA.find_CG_composition(final_back_candidates)
 for can in backs:
     print(str(can[0]) + " " + str(can[1]) + " " + str(can[2]))
-
+print("**")
 b = sgRNA.find_G_pos20(backs)
 for can in b:
     print(str(can[0]) + " " + str(can[1]) + " " + str(can[2]) + " " + can[3])
+
+print('\n')
+print(sgRNA.get_RNA_complement('ATGC'))
