@@ -125,8 +125,8 @@ def find_sgRNA(seq_file, start, end):
     5. self complementarity (for rna)
     '''
     sgRNA = sgRNAFinder(seq_file)
-    front_can = sgRNA.get_sgRNA_front(2340) # finding front sgRNA possibilities
-    back_can = sgRNA.get_sgRNA_back(2341) # finding back sgRNA possibilities
+    front_can = sgRNA.get_sgRNA_front(start) # finding front sgRNA possibilities
+    back_can = sgRNA.get_sgRNA_back(end) # finding back sgRNA possibilities
 
     # For testing
     '''
@@ -215,7 +215,7 @@ def find_sgRNA(seq_file, start, end):
     for count, seq in enumerate(b):
         out += b[count][0] + '\t' + str(b[count][1]) + ' \t\t' + str(b[count][2]) + '   \t' + b[count][3]
         out += '\t' + str(sgRNA.self_complement_score(b[count][0]))
-        if b[count][3] == 'Y' or sgRNA.self_complement_score(b[count][0]) > 0:
+        if not b[count][3] == 'Y' or sgRNA.self_complement_score(b[count][0]) > 0:
             out += '\t\t\tUNSAFE'
         else:
             out += '\t\t\tOK'
@@ -227,7 +227,7 @@ def find_sgRNA(seq_file, start, end):
     for count, seq in enumerate(f):
         out += f[count][0] + '\t' + str(f[count][1]) + ' \t\t' + str(f[count][2]) + '   \t' + f[count][3]
         out += '\t' + str(sgRNA.self_complement_score(f[count][0]))
-        if b[count][3] == 'Y' or sgRNA.self_complement_score(f[count][0]) > 0:
+        if not b[count][3] == 'Y' or sgRNA.self_complement_score(f[count][0]) > 0:
             out += '\t\t\tUNSAFE'
         else:
             out += '\t\t\tOK'
