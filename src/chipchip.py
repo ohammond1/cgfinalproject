@@ -24,15 +24,12 @@ def main():
         t = t.strip().replace('\n', '')
     p = input("Enter sequence to search for: ")
     p = p.strip()
-    tss = None
-    if search == "3" or search == "4":
-        tss = input("Enter transcription start site: ")
-        tss = tss.strip()
     indices = find_alignment(p, t)
     if indices[0] == -1:
         print("No valid alignments found")
         return
-    find_sgRNA(filename, indices[0], indices[1], int(search), tss)
+
+    find_sgRNA(filename, indices[0], indices[1], int(search))
 
 
 if __name__ == "__main__":

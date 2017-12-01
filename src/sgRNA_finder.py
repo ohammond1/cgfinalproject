@@ -114,7 +114,7 @@ class sgRNAFinder:
 
 
 
-def find_sgRNA(seq_file, start, end, search_type, tss):
+def find_sgRNA(seq_file, start, end, search_type):
     '''
     search_type:
     1 = Knockout
