@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-import sys
+import sys, os
 from sgRNA_finder import find_sgRNA
 from find_alignment import find_alignment
 
@@ -15,7 +15,7 @@ def main():
     while search != "1" and search != "2" and search != "3" and search != "4":
         search = input("Please enter a valid input [1-4]: ")
     filename = input("Enter genome filename: ")
-    while not os.path.isfile(filename):
+    while not os.path.isfile(os.getcwd() + "/" + filename):
         filename = input("Please enter a valid genome filename: ")
     t = ""
     with open(filename, "r") as infile:
@@ -32,7 +32,7 @@ def main():
     if indices[0] == -1:
         print("No valid alignments found")
         return
-    find_sgRNA(filename, indices[0], indices[1], search, tss)
+    find_sgRNA(filename, indices[0], indices[1], int(search), tss)
 
 
 if __name__ == "__main__":
