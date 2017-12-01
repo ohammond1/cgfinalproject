@@ -16,17 +16,39 @@ class sgRNAFinder:
         data = ''.join(data)
         return data
 
-    def get_sgRNA_front(self, front_index, front_offset=-20, back_offset=0):
-        front_candidates = []
-        for i in range(front_index+front_offset+1, front_index+back_offset+1):
-            if i < 0:
+    def get_sgRNA_front(self, front_index, back_index, search_type):
+        print(self.ref_genome)
+        '''
+        Search Types:
+        1. Knockout
+        2. Edit
+        3. Activation
+        4. Interference
+        '''
+        candidates = []
+        if search_type == 1 or search_type == 2:
+            front_offset = front_index
+            back_offset = back_index - 19
+        elif search_type == 3:
+            front_offset = front_index - 500
+            back_offset = front_index - 50
+        elif search_type == 4:
+            front_offset = front_index - 300
+            back_offset = front_index + 50
+        else:
+            raise Exception('Invalid Search Type Error')
+        if front_offset < 0:
+            front_offset = 0
+
+        for i in range(front_offset, back_offset):
+            if self.ref_genome[i+21:i+23] == 'GG':
+                candidates.append(self.ref_genome[i:i+23])
+            if i < 3:
                 continue
-            if i+19 >= len(self.ref_genome):
-                break
-            if not self.ref_genome[i:i+20].endswith('GG'):
-                continue
-            front_candidates.append(self.ref_genome[i:i+20])
-        return front_candidates
+            if self.ref_genome[i-3:i-1] == 'CC':
+                candidates.append(self.ref_genome[i-3:i+20])
+
+        return candidates
 
     def get_sgRNA_back(self, back_index, front_offset=-20, back_offset=0):
         back_candidates = []
