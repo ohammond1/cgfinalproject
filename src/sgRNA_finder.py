@@ -114,7 +114,14 @@ class sgRNAFinder:
 
 
 
-def find_sgRNA(seq_file, start, end):
+def find_sgRNA(seq_file, start, end, search_type, tss):
+    '''
+    search_type:
+    1 = Knockout
+    2 = Edit
+    3 = Activation
+    4 = Interference
+    '''
 
     '''
     Rows:
