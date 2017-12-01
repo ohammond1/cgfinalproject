@@ -7,24 +7,34 @@ import math
 from pre_process import create_dict
 
 
+
+# Calculate edit distance between sequences x and y using
+# matrix dynamic programming.  Return distance.
 def edDistDp(x, y, worstDist):
-    """ Calculate edit distance between sequences x and y using
-        matrix dynamic programming.  Return distance. """
+
     D = np.zeros((len(x)+1, len(y)+1), dtype=int)
     D[1:, 0] = range(1, len(x)+1)
+
+    # Fill in the matrix with values based on delta
     for i in range(1, len(x)+1):
         for j in range(1, len(y)+1):
             delt = 1 if x[i-1] != y[j-1] else 0
             D[i, j] = min(D[i-1, j-1]+delt, D[i-1, j]+1, D[i, j-1]+1)
 
     minIndex = 0
+
+    # Locate the min value of the last row
     for col in range(len(y)+1):
         if D[len(x), col] < D[len(x), minIndex]:
             minIndex = col
+
     if D[len(x), minIndex] > worstDist:
         return (-1, -1)
+
     row = len(x)
     col = minIndex
+
+    # Traceback until reaching the top row
     while row > 0:
         minNext = min(D[row-1, col-1], D[row-1, col], D[row, col-1])
         if minNext == D[row-1, col-1]:
@@ -38,7 +48,9 @@ def edDistDp(x, y, worstDist):
     return (startIndex, D[len(x), minIndex])
 
 
+# Look through the kmer index to find approximate matches
 def queryIndex(p, t, index, k, worstDist):
+
     # Keep track of index of best matches
     bestIndex = -1
     # Keep best edit distance
@@ -47,27 +59,35 @@ def queryIndex(p, t, index, k, worstDist):
     split = partition(p, worstDist + 2)
     kmer_len = len(split[0])
     i = 0
+    # For each kmer in the search sequence
     for kmer in split:
-        #matches = query(kmer_len, kmer, index)
         matches = index.get(kmer, [])
-        print(matches)
         for match in matches:
             startIndex = match - i - worstDist
             endIndex = match - i + len(p) + worstDist
+
             if startIndex < 0:
                 startIndex = 0
+
             if endIndex > len(t):
                 endIndex = len(t)
+
             checkDist = bestIndex
+
             if checkDist == -1:
                 checkDist = worstDist
             ed = edDistDp(p, t[startIndex:endIndex], checkDist)
+
             if ed[0] != -1:
                 bestDistance = ed[1]
                 bestIndex = startIndex + ed[0]
+
         i += k
     return bestIndex
 
+
+# Creates a partition of the given string into equal length pieces
+# with the last piece being shorter if needed
 def partition(p, pieces=2):
     assert len(p) >= pieces
     base, mod = int(math.ceil(len(p) / pieces)), len(p) % pieces
@@ -81,10 +101,11 @@ def partition(p, pieces=2):
             newIdx = idx + base
             ps.append(p[idx:newIdx])
             idx = newIdx
-    print(ps)
     return ps
 
 
+# Given a pattern and target finds the best alignment
+# and returns the start and end indices
 def find_alignment(p, t):
     editDist = int(math.floor(len(p) * .02))
     k = int(math.ceil(len(p) / (editDist + 2)))
@@ -95,6 +116,7 @@ def find_alignment(p, t):
     return (start_index, end_index)
 
 
+
 def main():
     filename = sys.argv[1]
     p = sys.argv[2].strip()
@@ -103,7 +125,6 @@ def main():
         infile.readline()
         t = infile.read()
         t = t.strip().replace('\n', '')
-    print(find_alignment(p,t))
 
 if __name__ == "__main__":
     main()
