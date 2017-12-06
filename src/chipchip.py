@@ -24,6 +24,7 @@ def main():
         t = t.strip().replace('\n', '')
     p = input("Enter sequence to search for: ")
     p = p.strip()
+    # Get start and end indices of best alignment of p in t
     indices = find_alignment(p, t)
     if indices[0] == -1:
         print("No valid alignments found")

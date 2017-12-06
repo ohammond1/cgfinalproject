@@ -4,10 +4,12 @@ import bwt
 import operator
 
 class sgRNAFinder:
+    # Initialize object to have reference genome and 5-mer index
     def __init__(self, ref_genome_file):
         self.ref_genome = self.parse_fasta(ref_genome_file)
         self.kmer_index = pre_process.create_dict(self.ref_genome, 5)
 
+    # Parse fasta file to get reference genome as string
     def parse_fasta(self, filename):
         data = open('../genomes/' + filename, 'r').read()
         data = data.strip()
@@ -16,7 +18,8 @@ class sgRNAFinder:
         data = ''.join(data)
         return data
 
-    def get_sgRNA_front(self, front_index, back_index, search_type):
+    # Finding potential sgRNAs on both strands
+    def get_sgRNA_cand(self, front_index, back_index, search_type):
         '''
         Search Types:
         1. Knockout
@@ -24,8 +27,9 @@ class sgRNAFinder:
         3. Activation
         4. Interference
         '''
-        f_candidates = []
-        r_candidates = []
+        f_candidates = [] # Candidates on forward strand
+        r_candidates = [] # Candidates on reverse strand
+        # Setting offsets based on search type
         if search_type == 1 or search_type == 2:
             front_offset = front_index
             back_offset = back_index - 19
@@ -40,6 +44,7 @@ class sgRNAFinder:
         if front_offset < 0:
             front_offset = 0
 
+        # Finding candidates in correct region with PAM sequence
         for i in range(front_offset, back_offset):
             if self.ref_genome[i+21:i+23] == 'GG':
                 f_candidates.append(self.ref_genome[i:i+23])
@@ -49,18 +54,6 @@ class sgRNAFinder:
                 r_candidates.append(self.ref_genome[i-3:i+20])
 
         return (f_candidates, r_candidates)
-
-    def get_sgRNA_back(self, back_index, front_offset=-20, back_offset=0):
-        back_candidates = []
-        for i in range(back_index+front_offset+1, back_index+back_offset+1):
-            if i+19 >= len(self.ref_genome):
-                break
-            if i < 0:
-                continue
-            if not self.ref_genome[i:i+20].endswith('GG'):
-                continue
-            back_candidates.append(self.ref_genome[i:i+20])
-        return back_candidates
 
     def query(self, candidate):
         return self.kmer_index.get(candidate, [])
@@ -100,6 +93,8 @@ class sgRNAFinder:
             possibilities.append((can[0], can[1], comp_CG))
         return possibilities
 
+    # Find candidates with G in 20th position for sgRNAs on forward strand
+    # Determining whether the sgRNA violates parameters
     def find_G_pos20(self, candidates):
         possibilities = []
         is_G = ''
@@ -109,12 +104,14 @@ class sgRNAFinder:
             else:
                 is_G = 'N'
             warn = "OK"
+            # Checking to see if sgRNA violates parameters
             if can[1] > 0 or can[2] > .8 or can[2] < .4 or is_G == 'N' or self.self_complement_score(can[0]) > 0:
                 warn = "WARNING"
             possibilities.append((can[0], can[1], can[2], is_G, warn))
         return possibilities
 
-
+    # Find candidates with C in 3rd position for sgRNAs on reverse strand
+    # Determining whether the sgRNA violates parameters
     def find_C_pos1(self, candidates):
         possibilities = []
         is_C = ''
@@ -124,17 +121,22 @@ class sgRNAFinder:
             else:
                 is_C = 'N'
             warn = "OK"
+            # Checking to see if sgRNA violates parameters
             if can[1] > 0 or can[2] > .8 or can[2] < .4 or is_C == 'N' or self.self_complement_score(can[0]) > 0:
                 warn = "WARNING"
             possibilities.append((can[0], can[1], can[2], is_C, warn))
         return possibilities
 
-
+    # Finds off target hits using BWT algorithm
     def query_index_bwt(self, candidate):
         bwt_data = bwt.make_all(self.ref_genome)
-        return bwt.find(candidate, self.ref_genome, mismatches=3, bwt_data=bwt_data)
+        indices = bwt.find(candidate, self.ref_genome, mismatches=3, bwt_data=bwt_data)
+        return (indices, -1)
 
+    # Determining if the sgRNA is capable on folding in on itself
+    # by seeing if it is self-complementary
     def self_complement_score(self, candidate):
+        # n_map is for finding RNA complements
         n_map = {'A': 'U', 'U':'A', 'G':'C', 'C':'G'}
         first_half = self.get_RNA_complement(candidate[:int(len(candidate)/2)])
         second_half = self.get_RNA_complement(candidate[int(len(candidate)/2):])
@@ -169,12 +171,6 @@ class sgRNAFinder:
                 rev_comp += 'C'
         return rev_comp
 
-    def check_okay(self, can, comp):
-        if can[1] > 0 or can[2] > .8 or can[2] < .4 or can[3] == 'N' or comp > 0:
-            return "WARNING"
-        else:
-            return "OK"
-
 
 def find_sgRNA(seq_file, start, end, search_type):
     '''
@@ -194,12 +190,11 @@ def find_sgRNA(seq_file, start, end, search_type):
     5. self complementarity (for rna)
     '''
     sgRNA = sgRNAFinder(seq_file)
-    (front_can, back_can) = sgRNA.get_sgRNA_front(start,end,search_type) # finding sgRNAs
+    (front_can, back_can) = sgRNA.get_sgRNA_cand(start,end,search_type) # finding sgRNAs
 
-    # Dealing with first sgRNA
+    # Dealing with forward strand sgRNAs
     final_front_candidates = []
     for can in front_can: # for each candidate
-
         pam = can[20:23]
         can = can[0:20]
         f_hits = set() # kmer hits
@@ -294,14 +289,16 @@ def find_sgRNA(seq_file, start, end, search_type):
         # -1 because it will always find itself
         final_back_candidates.append((pam + can, len(off_target_hits)-1))
 
+    # Adding information about parameters to sgRNAs
     backs = sgRNA.find_CG_composition(final_back_candidates)
     fronts = sgRNA.find_CG_composition(final_front_candidates)
     f = sgRNA.find_G_pos20(fronts)
     b = sgRNA.find_C_pos1(backs)
 
-    f.sort(key=operator.itemgetter(1, 4)) #sorts list by off-target hits
-    b.sort(key=operator.itemgetter(1, 4)) #sorts list by off-target hits
+    f.sort(key=operator.itemgetter(1, 4)) #sorts list by off-target hits, warning
+    b.sort(key=operator.itemgetter(1, 4)) #sorts list by off-target hits, warning
     print("FRONT sgRNA")
+    # Format output
     out = 'Sequence\t\tOff-site hits\tCG%    G-20th\tSelf–Complementarity\tWarning\n'
     f_set = set()
     b_set = set()
@@ -316,6 +313,7 @@ def find_sgRNA(seq_file, start, end, search_type):
     print(out)
     print("-------------------------------------------------------------------------")
     print("BACK sgRNA")
+    # Format output
     out = 'Sequence\t\tOff-site hits\tCG%    G-20th\tSelf–Complementarity\tWarning\n'
     for count, seq in enumerate(b):
         if b[count] in b_set:
