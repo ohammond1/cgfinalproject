@@ -323,6 +323,6 @@ def find_sgRNA(seq_file, start, end, search_type):
         b_set.add(b[count])
         out += b[count][0] + '\t' + str(b[count][1]) + ' \t\t' + str(b[count][2]) + '   \t' + b[count][3]
         out += '\t' + str(sgRNA.self_complement_score(b[count][0]))
-        out += '\t\t\t' + f[count][4]
+        out += '\t\t\t' + b[count][4]
         out += '\n'
     print(out)
