@@ -4,8 +4,17 @@ import sys
 import numpy as np
 import pickle
 import math
-from pre_process import create_dict
 
+def create_dict(t, k):
+    ''' Create index from all substrings of size 'length' '''
+    index = {}
+    for i in range(len(t) - k + 1):
+        kmer = t[i:i+k]
+        if kmer not in index:
+            index[kmer] = [i]
+        else:
+            index[kmer].append(i)
+    return index
 
 def edDistDp(x, y, worstDist):
     """ Calculate edit distance between sequences x and y using
@@ -50,7 +59,6 @@ def queryIndex(p, t, index, k, worstDist):
     for kmer in split:
         #matches = query(kmer_len, kmer, index)
         matches = index.get(kmer, [])
-        print(matches)
         for match in matches:
             startIndex = match - i - worstDist
             endIndex = match - i + len(p) + worstDist
@@ -81,7 +89,6 @@ def partition(p, pieces=2):
             newIdx = idx + base
             ps.append(p[idx:newIdx])
             idx = newIdx
-    print(ps)
     return ps
 
 
@@ -93,17 +100,3 @@ def find_alignment(p, t):
     start_index = queryIndex(p, t, index, k, editDist)
     end_index = start_index + len(p)
     return (start_index, end_index)
-
-
-def main():
-    filename = sys.argv[1]
-    p = sys.argv[2].strip()
-    t = ""
-    with open(filename, "r") as infile:
-        infile.readline()
-        t = infile.read()
-        t = t.strip().replace('\n', '')
-    print(find_alignment(p,t))
-
-if __name__ == "__main__":
-    main()

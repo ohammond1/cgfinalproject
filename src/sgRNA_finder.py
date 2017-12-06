@@ -1,4 +1,3 @@
-
 import pre_process
 from find_alignment import find_alignment
 import bwt
@@ -18,7 +17,6 @@ class sgRNAFinder:
         return data
 
     def get_sgRNA_front(self, front_index, back_index, search_type):
-        #print(self.ref_genome)
         '''
         Search Types:
         1. Knockout
@@ -110,7 +108,10 @@ class sgRNAFinder:
                 is_G = 'Y'
             else:
                 is_G = 'N'
-            possibilities.append((can[0], can[1], can[2], is_G))
+            warn = "OK"
+            if can[1] > 0 or can[2] > .8 or can[2] < .4 or is_G == 'N' or self.self_complement_score(can[0]) > 0:
+                warn = "WARNING"
+            possibilities.append((can[0], can[1], can[2], is_G, warn))
         return possibilities
 
 
@@ -122,7 +123,10 @@ class sgRNAFinder:
                 is_C = 'Y'
             else:
                 is_C = 'N'
-            possibilities.append((can[0], can[1], can[2], is_C))
+            warn = "OK"
+            if can[1] > 0 or can[2] > .8 or can[2] < .4 or is_C == 'N' or self.self_complement_score(can[0]) > 0:
+                warn = "WARNING"
+            possibilities.append((can[0], can[1], can[2], is_C, warn))
         return possibilities
 
 
@@ -163,10 +167,6 @@ class sgRNAFinder:
                 rev_comp += 'G'
             elif letter == 'G':
                 rev_comp += 'C'
-
-        if dna_original == 'GGGAGGTCTGCCACAGTCGT':
-            print(dna)
-            print(rev_comp)
         return rev_comp
 
     def check_okay(self, can, comp):
@@ -195,15 +195,6 @@ def find_sgRNA(seq_file, start, end, search_type):
     '''
     sgRNA = sgRNAFinder(seq_file)
     (front_can, back_can) = sgRNA.get_sgRNA_front(start,end,search_type) # finding sgRNAs
-
-    # For testing
-    '''
-    print(front_can)
-    print(len(front_can))
-    print()
-    print(back_can)
-    print(len(back_can))
-    print()'''
 
     # Dealing with first sgRNA
     final_front_candidates = []
@@ -245,7 +236,7 @@ def find_sgRNA(seq_file, start, end, search_type):
         # checking that the rest of the pattern matches
         for i in r_hits:
             # checking that the alignment is in bounds
-            if i >= 0 and i+20 < len(sgRNA.ref_genome): 
+            if i >= 0 and i+20 < len(sgRNA.ref_genome):
                 ham = sgRNA.naive_approx_hamming(rev_can, sgRNA.ref_genome[i:i+20], 3)[0 ]
                 if ham != -1: # checking that hamming distance is <= 3
                     off_target_hits.append(i)
@@ -253,14 +244,6 @@ def find_sgRNA(seq_file, start, end, search_type):
         # append candidate and number of off target hits to final list
         # -1 because it will always find itself
         final_front_candidates.append((can + pam, len(off_target_hits)-1))
-
-
-    # # printing out final list of candidates
-    # print("Possible sgRNAs for 5' end: ")
-    # for can in final_front_candidates:
-    #     print(str(can[0]) + " " + str(can[1]))
-    #
-    # print() #formatting
 
     # Dealing with second sgRNA
     final_back_candidates = []
@@ -302,7 +285,7 @@ def find_sgRNA(seq_file, start, end, search_type):
         # checking that the rest of the pattern matches
         for i in r_hits:
             # checking that the alignment is in bounds
-            if i >= 0 and i+20 < len(sgRNA.ref_genome): 
+            if i >= 0 and i+20 < len(sgRNA.ref_genome):
                 ham = sgRNA.naive_approx_hamming(rev_can, sgRNA.ref_genome[i:i+20], 3)[0 ]
                 if ham != -1: # checking that hamming distance is <= 3
                     off_target_hits.append(i)
@@ -311,23 +294,15 @@ def find_sgRNA(seq_file, start, end, search_type):
         # -1 because it will always find itself
         final_back_candidates.append((pam + can, len(off_target_hits)-1))
 
-    # printing out final list of back candidiates
-    # print("Possible sgRNAs for 3' end: ")
-    # for can in final_back_candidates:
-    #     print(str(can[0]) + " " + str(can[1]))
-    #
-    # print()
-
     backs = sgRNA.find_CG_composition(final_back_candidates)
     fronts = sgRNA.find_CG_composition(final_front_candidates)
     f = sgRNA.find_G_pos20(fronts)
     b = sgRNA.find_C_pos1(backs)
 
-    f.sort(key=operator.itemgetter(1)) #sorts list by off-target hits
-    b.sort(key=operator.itemgetter(1)) #sorts list by off-target hits
+    f.sort(key=operator.itemgetter(1, 4)) #sorts list by off-target hits
+    b.sort(key=operator.itemgetter(1, 4)) #sorts list by off-target hits
     print("FRONT sgRNA")
     out = 'Sequence\t\tOff-site hits\tCG%    G-20th\tSelf–Complementarity\tWarning\n'
-    #out = 'Sequence\t\tOff-site hits\tCG%    G-20th\tSelf–Complementarity\tWarning\n'
     f_set = set()
     b_set = set()
     for count, seq in enumerate(f):
@@ -336,12 +311,7 @@ def find_sgRNA(seq_file, start, end, search_type):
         f_set.add(f[count])
         out += f[count][0] + '\t' + str(f[count][1]) + ' \t\t' + str(f[count][2]) + '   \t' + f[count][3]
         out += '\t' + str(sgRNA.self_complement_score(f[count][0]))
-        warn = sgRNA.check_okay(f[count], sgRNA.self_complement_score(f[count][0]))
-        out += '\t\t\t' + warn
-        #if not f[count][3] == 'N' or sgRNA.self_complement_score(f[count][0]) > 0 or f[count][2] > .8 or f[count][2] < .4 or f[count][1] > 0:
-            #out += '\t\t\tUNSAFE'
-        #else:
-            #out += '\t\t\tOK'
+        out += '\t\t\t' + f[count][4]
         out += '\n'
     print(out)
     print("-------------------------------------------------------------------------")
@@ -353,11 +323,6 @@ def find_sgRNA(seq_file, start, end, search_type):
         b_set.add(b[count])
         out += b[count][0] + '\t' + str(b[count][1]) + ' \t\t' + str(b[count][2]) + '   \t' + b[count][3]
         out += '\t' + str(sgRNA.self_complement_score(b[count][0]))
-        warn = sgRNA.check_okay(b[count], sgRNA.self_complement_score(b[count][0]))
-        out += '\t\t\t' + warn
-        #if not b[count][3] == 'Y' or sgRNA.self_complement_score(b[count][0]) > 0:
-        #    out += '\t\t\tUNSAFE'
-        #else:
-        #    out += '\t\t\tOK'
+        out += '\t\t\t' + f[count][4]
         out += '\n'
     print(out)
