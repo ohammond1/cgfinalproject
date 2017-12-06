@@ -149,7 +149,8 @@ class sgRNAFinder:
         rna = [complement[i] for i in dna]
         return ''.join(rna)
 
-    def get_reverse_complement(self, dna):
+    def get_reverse_complement(self, dna_original):
+        dna = dna_original[:]
         dna = dna[::-1]
         rev_comp = ""
 
@@ -163,6 +164,9 @@ class sgRNAFinder:
             elif letter == 'G':
                 rev_comp += 'C'
 
+        if dna_original == 'GGGAGGTCTGCCACAGTCGT':
+            print(dna)
+            print(rev_comp)
         return rev_comp
 
     def check_okay(self, can, comp):
@@ -204,35 +208,45 @@ def find_sgRNA(seq_file, start, end, search_type):
     # Dealing with first sgRNA
     final_front_candidates = []
     for can in front_can: # for each candidate
+
         pam = can[20:23]
         can = can[0:20]
-        hits = set() # kmer hits
+        f_hits = set() # kmer hits
+        r_hits = set() # kmer hits
         off_target_hits = [] # approximate matches
         # for each kmer, find matches and add appropriate offset to index
         for hit in sgRNA.queryIndex(can[:5])[0]:
-            hits.add(hit)
+            f_hits.add(hit)
         for hit in sgRNA.queryIndex(can[5:10])[0]:
-            hits.add(hit-5)
+            f_hits.add(hit-5)
         for hit in sgRNA.queryIndex(can[10:15])[0]:
-            hits.add(hit-10)
+            f_hits.add(hit-10)
         for hit in sgRNA.queryIndex(can[15:])[0]:
-            hits.add(hit-15)
+            f_hits.add(hit-15)
+
+        # checking that the rest of the pattern matches
+        for i in f_hits:
+            if i >= 0 and i+20 < len(sgRNA.ref_genome): # checking that the alignmen t is in bounds
+                ham = sgRNA.naive_approx_hamming(can, sgRNA.ref_genome[i:i+20], 3)[0 ]
+                if ham != -1: # checking that hamming distance is <= 3
+                    off_target_hits.append(i)
 
         # Search for each kmer hit of reverse complement
         rev_can = sgRNA.get_reverse_complement(can)
         for hit in sgRNA.queryIndex(rev_can[:5])[0]:
-            hits.add(hit)
+            r_hits.add(hit)
         for hit in sgRNA.queryIndex(rev_can[5:10])[0]:
-            hits.add(hit-5)
+            r_hits.add(hit-5)
         for hit in sgRNA.queryIndex(rev_can[10:15])[0]:
-            hits.add(hit-10)
+            r_hits.add(hit-10)
         for hit in sgRNA.queryIndex(rev_can[15:20])[0]:
-            hits.add(hit-15)
+            r_hits.add(hit-15)
 
         # checking that the rest of the pattern matches
-        for i in hits:
-            if i >= 0 and i+20 < len(sgRNA.ref_genome): # checking that the alignmen t is in bounds
-                ham = sgRNA.naive_approx_hamming(can, sgRNA.ref_genome[i:i+20], 3)[0 ]
+        for i in r_hits:
+            # checking that the alignment is in bounds
+            if i >= 0 and i+20 < len(sgRNA.ref_genome): 
+                ham = sgRNA.naive_approx_hamming(rev_can, sgRNA.ref_genome[i:i+20], 3)[0 ]
                 if ham != -1: # checking that hamming distance is <= 3
                     off_target_hits.append(i)
 
@@ -253,34 +267,43 @@ def find_sgRNA(seq_file, start, end, search_type):
     for can in back_can: # for each candidate
         pam = can[0:3]
         can = can[3:]
-        hits = set() # kmer hits
+        f_hits = set() # kmer hits
+        r_hits = set() # kmer hits
         off_target_hits = [] # approximate matches
         # for each kmer, find matches and add appropriate offset to index
         for hit in sgRNA.queryIndex(can[:5])[0]:
-            hits.add(hit)
+            f_hits.add(hit)
         for hit in sgRNA.queryIndex(can[5:10])[0]:
-            hits.add(hit-5)
+            f_hits.add(hit-5)
         for hit in sgRNA.queryIndex(can[10:15])[0]:
-            hits.add(hit-10)
+            f_hits.add(hit-10)
         for hit in sgRNA.queryIndex(can[15:20])[0]:
-            hits.add(hit-15)
+            f_hits.add(hit-15)
+
+        # checking that the rest of the pattern matches
+        for i in f_hits:
+            if i >= 0 and i+20 < len(sgRNA.ref_genome): # checking that the alignmen t is in bounds
+                ham = sgRNA.naive_approx_hamming(can, sgRNA.ref_genome[i:i+20], 3)[0 ]
+                if ham != -1: # checking that hamming distance is <= 3
+                    off_target_hits.append(i)
 
 
         # Search for each kmer hit of reverse complement
         rev_can = sgRNA.get_reverse_complement(can)
         for hit in sgRNA.queryIndex(rev_can[:5])[0]:
-            hits.add(hit)
+            r_hits.add(hit)
         for hit in sgRNA.queryIndex(rev_can[5:10])[0]:
-            hits.add(hit-5)
+            r_hits.add(hit-5)
         for hit in sgRNA.queryIndex(rev_can[10:15])[0]:
-            hits.add(hit-10)
+            r_hits.add(hit-10)
         for hit in sgRNA.queryIndex(rev_can[15:])[0]:
-            hits.add(hit-15)
+            r_hits.add(hit-15)
 
         # checking that the rest of the pattern matches
-        for i in hits:
-            if i >= 0 and i+20 < len(sgRNA.ref_genome): # checking that the alignmen t is in bounds
-                ham = sgRNA.naive_approx_hamming(can, sgRNA.ref_genome[i:i+20], 3)[0 ]
+        for i in r_hits:
+            # checking that the alignment is in bounds
+            if i >= 0 and i+20 < len(sgRNA.ref_genome): 
+                ham = sgRNA.naive_approx_hamming(rev_can, sgRNA.ref_genome[i:i+20], 3)[0 ]
                 if ham != -1: # checking that hamming distance is <= 3
                     off_target_hits.append(i)
 
