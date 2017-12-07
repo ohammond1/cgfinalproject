@@ -22,7 +22,7 @@ def main():
         infile.readline()
         t = infile.read()
         t = t.strip().replace('\n', '')
-    p = input("Enter sequence to search for: ")
+    p = input("Enter sequence to search for (all uppercase): ")
     p = p.strip()
     # Get start and end indices of best alignment of p in t
     indices = find_alignment(p, t)

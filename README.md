@@ -2,6 +2,24 @@
 
 Tool designed to find CRIPSR/Cas9 sgRNA for specified sequences.
 
+# How to run
+To run our code, execute:
+```
+./chipchip.py
+```
+and input parameters through the prompts.
+
+Search Types:
+1. Knockout
+2. Edit
+3. Activation
+4. Interference
+
+Genome filename is the path from the current working directory to the genome's
+.fna file.
+
+The sequence to search for should be all uppercase and consist of A, C, G, T.
+
 # Our files
 
 chipchip.py
