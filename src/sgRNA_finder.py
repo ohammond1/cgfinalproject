@@ -1,5 +1,4 @@
-import pre_process
-from find_alignment import find_alignment
+from find_alignment import create_dict
 import bwt
 import operator
 
@@ -7,7 +6,7 @@ class sgRNAFinder:
     # Initialize object to have reference genome and 5-mer index
     def __init__(self, ref_genome_file):
         self.ref_genome = self.parse_fasta(ref_genome_file)
-        self.kmer_index = pre_process.create_dict(self.ref_genome, 5)
+        self.kmer_index = create_dict(self.ref_genome, 5)
 
     # Parse fasta file to get reference genome as string
     def parse_fasta(self, filename):
