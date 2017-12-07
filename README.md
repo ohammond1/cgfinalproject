@@ -40,3 +40,37 @@ target hits.
 
 timer.sh
 Timer file.
+
+
+# Running Tests
+
+To run tests referenced in our paper, use the following commands
+
+./chipchip.py
+1
+../genomes/herpesvirusHG52.fna
+CCTCGGGTTCCCAAGACCTATCACGTGTGCGCAGGGGAGGGGAGGACGCGGGGGAGGGGAGGACGC
+GGGGGAGGGGAGGACGCGGGGGATATATAAAGCGGTAGAAAGCGCGGG 
+
+
+In order to get the results for CHOPCHOP as shown in the paper, go to the website 
+http://chopchop.cbu.uib.no/
+Once at this website change the search type from gene target to fasta target
+by clicking on the Fasta target button above Find Target. Next enter the target
+sequence above, and click Find Targets.
+
+
+Timing tests
+To run the timing tests described in the paper enter the following commands.
+On the ugrad server enter:
+time ./timer.sh timer_chipchip.py ../genomes/herpesvirusHG52.fna <target sequence>
+
+where in the case of our testing target sequence was 100, 250, and 500 base
+pair prefixes of the following sequence.
+GCCGGGCGGGGGCGCGCGGCGGCCGGGCGGGGGCGCGCGGCGGCCGGGCGGGGGCGCGCTTTCCCCGCGTCGCCCCT
+CGGGTTCCCAAGACCTATCACGTGTGCGCAGGGGAGGGGAGGACGCGGGGGAGGGGAGGACGCGGGGGAGGGGAGGA
+CGCGGGGGATATATAAAGCGGTAGAAAGCGCGGGAATGGGCATATTGGACCCGCGTGATTCGGTTGCTCGCGGTTGT
+CTTGTTTGGACGTTTTTTATGCGGGAACAAGGGGGCTTACCGGTTACACTGTCCGCTCGCTATGGGGTTCGTCTGTC
+TGTTTGGGCTTGTCGTTATGGGAGCCTGGGGGGCGTGGGGTGGGTCACAGGCAACCGAATATGTTCTTCGTAGTGTT
+ATTGCCAAAGAGGTGGGGGACATACTAAGAGTGCCTTGCATGCGGACCCCCGCGGACGATGTTTCTTGGCGCTACGA
+GGCCCCGTCCGTTATTGACTATGCCCGCATAGACGGAA
